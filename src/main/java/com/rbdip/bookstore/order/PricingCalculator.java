@@ -3,12 +3,14 @@ package com.rbdip.bookstore.order;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+import org.springframework.stereotype.Component;
 
 /**
  * Модуль расчёта цены заказа. Намеренно почти не покрыт тестами и
  * содержит magic numbers / нечитаемые ветвления скидок - цель для
  * характеризационных тестов (ЛР2) и mutation-testing гейта PIT (ЛР5).
  */
+@Component
 public class PricingCalculator {
 
     public record LineItem(BigDecimal price, int quantity) {
