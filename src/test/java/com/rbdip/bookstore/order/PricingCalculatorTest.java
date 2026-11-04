@@ -26,7 +26,10 @@ class PricingCalculatorTest {
         "100.01, 10, regular, , 980.10",
         "0.335, 3, regular, , 1.01",
         "100.00, 1, unknown, UNKNOWN, 100.00",
-        "100.00, 1, , , 100.00"
+        "100.00, 1, , , 100.00",
+        "1010.00, 1, regular, SAVE10, 1000.00",
+        "10.00, 0, regular, , 0.00",
+        "10.00, -1, regular, , 0.00"
     })
     void preservesDiscountOrderAndRounding(
             BigDecimal price, int quantity, String customerType, String couponCode, BigDecimal expected) {
@@ -34,6 +37,19 @@ class PricingCalculatorTest {
                 List.of(new PricingCalculator.LineItem(price, quantity)), customerType, couponCode);
 
         assertThat(total).isEqualTo(expected);
+    }
+
+    @Test
+    void returnsZeroForAnEmptyOrder() {
+        assertThat(calculator.calculateOrderTotal(List.of(), "regular", null))
+                .isEqualTo(new BigDecimal("0.00"));
+    }
+
+    @Test
+    void roundsOnlyAfterAddingAllLines() {
+        var item = new PricingCalculator.LineItem(new BigDecimal("0.335"), 1);
+        assertThat(calculator.calculateOrderTotal(List.of(item, item), "regular", null))
+                .isEqualTo(new BigDecimal("0.67"));
     }
 
     @Test
