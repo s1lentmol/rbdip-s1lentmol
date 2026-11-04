@@ -40,10 +40,10 @@ public class OrderController {
                     List<OrderItem> items = orderItemRepository.findByOrderId(order.getId());
                     return Map.<String, Object>of(
                             "id", order.getId(),
-                            "customerFullName", order.getCustomerFullName(),
+                            "customerFullName", order.getCustomer().getFullName(),
                             "status", order.getStatus(),
                             "items", items.stream()
-                                    .map(i -> Map.of("productName", i.getProductName(), "quantity", i.getQuantity()))
+                                    .map(i -> Map.of("productName", i.getProduct().getName(), "quantity", i.getQuantity()))
                                     .toList());
                 })
                 .toList();

@@ -30,7 +30,11 @@ class OrderCreationTest extends AbstractIntegrationTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(response.getBody().get("status").asText()).isEqualTo("new");
         assertThat(jdbcTemplate.queryForList(
-                "SELECT product_name, product_price, quantity FROM order_items ORDER BY id"))
+                """
+                SELECT p.name AS product_name, p.price AS product_price, i.quantity
+                FROM order_items i JOIN products p ON p.id = i.product_id
+                ORDER BY i.id
+                """))
                 .containsExactly(
                         Map.of("product_name", "Refactoring", "product_price", new BigDecimal("40.00"),
                                 "quantity", 1),
@@ -80,6 +84,22 @@ class OrderCreationTest extends AbstractIntegrationTest {
                 new CreateOrderRequest.Item(missingProductId, 1)));
 
         assertRejected(request, "product " + missingProductId + " not found");
+    }
+
+    @Test
+    void repeatedOrdersReuseTheCustomerAndKeepTheSelectedCatalogProduct() {
+        long firstProduct = createProduct("Same title", "19.00");
+        long secondProduct = createProduct("Same title", "19.00");
+        assertThat(createOrder(request(List.of(new CreateOrderRequest.Item(firstProduct, 1)))).getStatusCode())
+                .isEqualTo(HttpStatus.CREATED);
+        assertThat(createOrder(request(List.of(new CreateOrderRequest.Item(secondProduct, 1)))).getStatusCode())
+                .isEqualTo(HttpStatus.CREATED);
+
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM customers", Long.class)).isOne();
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(DISTINCT customer_id) FROM orders", Long.class))
+                .isOne();
+        assertThat(jdbcTemplate.queryForList("SELECT product_id FROM order_items ORDER BY id", Long.class))
+                .containsExactly(firstProduct, secondProduct);
     }
 
     @Test
