@@ -15,8 +15,11 @@ public class Customer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "full_name", nullable = false)
-    private String fullName;
+    @Column(name = "first_name", nullable = false)
+    private String firstName;
+
+    @Column(name = "last_name", nullable = false)
+    private String lastName;
 
     private String address;
 
@@ -26,7 +29,7 @@ public class Customer {
     }
 
     public String getFullName() {
-        return fullName;
+        return lastName.isEmpty() ? firstName : firstName + " " + lastName;
     }
 
     public String getAddress() {

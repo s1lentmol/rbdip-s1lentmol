@@ -8,16 +8,23 @@ public interface CustomerRepository extends Repository<Customer, Long> {
 
     @Modifying
     @Query(value = """
-            INSERT INTO customers (full_name, address, phone)
-            VALUES (:fullName, :address, :phone)
-            ON CONFLICT (full_name, address, phone) DO NOTHING
+            INSERT INTO customers (first_name, last_name, address, phone)
+            VALUES (:firstName, :lastName, :address, :phone)
+            ON CONFLICT (first_name, last_name, address, phone) DO NOTHING
             """, nativeQuery = true)
-    void insertIfAbsent(String fullName, String address, String phone);
+    void insertIfAbsent(String firstName, String lastName, String address, String phone);
 
-    Customer findByFullNameAndAddressAndPhone(String fullName, String address, String phone);
+    Customer findByFirstNameAndLastNameAndAddressAndPhone(
+            String firstName, String lastName, String address, String phone);
 
     default Customer findOrCreate(String fullName, String address, String phone) {
-        insertIfAbsent(fullName, address, phone);
-        return findByFullNameAndAddressAndPhone(fullName, address, phone);
+        int separator = fullName.indexOf(' ');
+        if (separator == fullName.length() - 1) {
+            separator = -1;
+        }
+        String firstName = separator < 0 ? fullName : fullName.substring(0, separator);
+        String lastName = separator < 0 ? "" : fullName.substring(separator + 1);
+        insertIfAbsent(firstName, lastName, address, phone);
+        return findByFirstNameAndLastNameAndAddressAndPhone(firstName, lastName, address, phone);
     }
 }
